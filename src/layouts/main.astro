@@ -31,6 +31,17 @@ const {
     />
 
     <title>{title}</title>
+
+    <script is:inline>
+      (function () {
+        const theme = localStorage.getItem("theme");
+        if (theme === "light") {
+          document.documentElement.classList.remove("dark");
+        } else {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
   </head>
   <body>
     <Navigation currentPage={currentPage} />

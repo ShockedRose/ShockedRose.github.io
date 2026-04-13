@@ -40,13 +40,80 @@ const { currentPage = "home" } = Astro.props;
           class="font-mono text-xs tracking-[0.2em] uppercase text-muted-foreground transition-colors hover:text-primary"
           >Contact</a
         >
+
+        <div class="h-4 w-px bg-border"></div>
+
+        <button
+          id="theme-toggle-desktop"
+          class="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground"
+          aria-label="Toggle theme"
+        >
+          <svg
+            class="hidden size-4 dark:block"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="4"></circle>
+            <path
+              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+            ></path>
+          </svg>
+          <svg
+            class="size-4 dark:hidden"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
       </div>
 
-      <button
-        id="mobile-menu-btn"
-        class="relative flex size-10 items-center justify-center text-foreground md:hidden"
-        aria-label="Toggle navigation"
-      >
+      <div class="flex items-center gap-1 md:hidden">
+        <button
+          id="theme-toggle-mobile"
+          class="flex size-10 items-center justify-center text-muted-foreground transition-colors hover:text-foreground"
+          aria-label="Toggle theme"
+        >
+          <svg
+            class="hidden size-5 dark:block"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="4"></circle>
+            <path
+              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"
+            ></path>
+          </svg>
+          <svg
+            class="size-5 dark:hidden"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+          </svg>
+        </button>
+
+        <button
+          id="mobile-menu-btn"
+          class="relative flex size-10 items-center justify-center text-foreground"
+          aria-label="Toggle navigation"
+        >
         <svg
           class="hamburger-icon size-5"
           viewBox="0 0 24 24"
@@ -71,6 +138,7 @@ const { currentPage = "home" } = Astro.props;
           <line x1="6" y1="18" x2="18" y2="6"></line>
         </svg>
       </button>
+      </div>
     </nav>
   </div>
 
@@ -175,5 +243,12 @@ const { currentPage = "home" } = Astro.props;
     const scrolled = window.scrollY > 50;
     header?.classList.toggle("bg-background/80", scrolled);
     header?.classList.toggle("backdrop-blur-xl", scrolled);
+  });
+
+  document.querySelectorAll('[id^="theme-toggle"]').forEach((toggle) => {
+    toggle.addEventListener("click", () => {
+      const isDark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("theme", isDark ? "dark" : "light");
+    });
   });
 </script>
