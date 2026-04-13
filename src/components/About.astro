@@ -1,0 +1,142 @@
+---
+import { Badge } from "@/components/ui/badge";
+
+const skills = {
+  frontend: ["React", "TypeScript", "Astro", "Next.js", "Tailwind CSS", "Vue.js"],
+  backend: ["Node.js", "Express", "PostgreSQL", "REST APIs", "GraphQL"],
+  tools: ["Git", "Docker", "Figma", "Vercel", "AWS", "Linux"],
+};
+---
+
+<section id="about" class="py-32 lg:py-40">
+  <div class="mx-auto max-w-7xl px-6 lg:px-16">
+    <div class="mb-16 flex items-center gap-4" data-animate>
+      <span class="font-mono text-xs tracking-[0.25em] text-primary">02</span>
+      <div class="h-px w-12 bg-accent-green/60"></div>
+      <span
+        class="font-mono text-xs tracking-[0.25em] uppercase text-muted-foreground"
+        >About</span
+      >
+    </div>
+
+    <div class="grid gap-16 lg:grid-cols-2 lg:gap-24">
+      <div data-animate data-animate-delay="1">
+        <h2
+          class="mb-8 font-display text-4xl leading-[1.1] text-foreground lg:text-5xl"
+        >
+          Building the web,<br />
+          <span class="text-primary italic">one pixel at a time.</span>
+        </h2>
+        <div class="flex flex-col gap-5 leading-relaxed text-muted-foreground">
+          <p>
+            I'm a web developer passionate about creating digital experiences
+            that are fast, accessible, and visually compelling. With a focus on
+            modern frontend technologies, I build interfaces that users love to
+            interact with.
+          </p>
+          <p>
+            My approach combines clean, maintainable code with a keen eye for
+            design. I believe the best web experiences come from the intersection
+            of technical excellence and creative thinking — where every animation
+            has purpose and every interaction feels natural.
+          </p>
+          <p>
+            When I'm not coding, you'll find me exploring new web technologies,
+            contributing to open source, or writing about development on my blog.
+          </p>
+        </div>
+      </div>
+
+      <div data-animate data-animate-delay="2">
+        <div class="flex flex-col gap-10">
+          <div>
+            <h3
+              class="mb-4 font-mono text-xs tracking-[0.25em] uppercase text-primary"
+            >
+              Frontend
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              {
+                skills.frontend.map((skill) => (
+                  <Badge
+                    variant="secondary"
+                    className="font-mono text-xs tracking-wide px-3 py-1.5"
+                  >
+                    {skill}
+                  </Badge>
+                ))
+              }
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="mb-4 font-mono text-xs tracking-[0.25em] uppercase text-primary"
+            >
+              Backend & Data
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              {
+                skills.backend.map((skill) => (
+                  <Badge
+                    variant="secondary"
+                    className="font-mono text-xs tracking-wide px-3 py-1.5"
+                  >
+                    {skill}
+                  </Badge>
+                ))
+              }
+            </div>
+          </div>
+
+          <div>
+            <h3
+              class="mb-4 font-mono text-xs tracking-[0.25em] uppercase text-primary"
+            >
+              Tools & Platform
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              {
+                skills.tools.map((skill) => (
+                  <Badge
+                    variant="secondary"
+                    className="font-mono text-xs tracking-wide px-3 py-1.5"
+                  >
+                    {skill}
+                  </Badge>
+                ))
+              }
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-6 border-t border-border pt-8">
+            <div>
+              <span class="block font-display text-3xl text-primary italic"
+                >5+</span
+              >
+              <span class="font-mono text-xs tracking-wide text-muted-foreground"
+                >Years Exp.</span
+              >
+            </div>
+            <div>
+              <span class="block font-display text-3xl text-primary italic"
+                >30+</span
+              >
+              <span class="font-mono text-xs tracking-wide text-muted-foreground"
+                >Projects</span
+              >
+            </div>
+            <div>
+              <span class="block font-display text-3xl text-primary italic"
+                >10+</span
+              >
+              <span class="font-mono text-xs tracking-wide text-muted-foreground"
+                >Clients</span
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

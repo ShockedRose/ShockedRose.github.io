@@ -1,15 +1,58 @@
 ---
-import "@/styles/global.css"
+import "@/styles/global.css";
+import Navigation from "@/components/Navigation.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+  currentPage?: string;
+}
+
+const {
+  title = "Miguel Rosa — Web Developer",
+  description = "Web developer crafting thoughtful, performant digital experiences with modern technologies.",
+  currentPage = "home",
+} = Astro.props;
 ---
 
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="author" content="Miguel Rosa" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Astro App</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+
+    <title>{title}</title>
   </head>
   <body>
-    <slot />
+    <Navigation currentPage={currentPage} />
+    <main>
+      <slot />
+    </main>
+
+    <script>
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("in-view");
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.1, rootMargin: "0px 0px -60px 0px" },
+      );
+      document
+        .querySelectorAll("[data-animate]")
+        .forEach((el) => observer.observe(el));
+    </script>
   </body>
 </html>

@@ -1,0 +1,112 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import { Badge } from "@/components/ui/badge";
+
+type BlogPost = CollectionEntry<"blog">;
+
+const posts: BlogPost[] = (await getCollection("blog"))
+  .filter((post: BlogPost) => !post.data.draft)
+  .sort((a: BlogPost, b: BlogPost) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 3);
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+---
+
+<section id="blog" class="py-32 lg:py-40">
+  <div class="mx-auto max-w-7xl px-6 lg:px-16">
+    <div class="mb-16 flex items-center gap-4" data-animate>
+      <span class="font-mono text-xs tracking-[0.25em] text-primary">04</span>
+      <div class="h-px w-12 bg-accent-green/60"></div>
+      <span
+        class="font-mono text-xs tracking-[0.25em] uppercase text-muted-foreground"
+        >From the Blog</span
+      >
+    </div>
+
+    <div
+      class="mb-12 flex flex-col gap-6 md:flex-row md:items-end md:justify-between"
+      data-animate
+      data-animate-delay="1"
+    >
+      <h2
+        class="font-display text-4xl leading-[1.1] text-foreground lg:text-5xl"
+      >
+        Thoughts &<br />
+        <span class="text-primary italic">explorations.</span>
+      </h2>
+      <a
+        href="/blog"
+        class="group inline-flex items-center gap-2 font-mono text-sm text-primary transition-colors hover:text-primary/80"
+      >
+        View All Posts
+        <svg
+          class="size-4 transition-transform group-hover:translate-x-1"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M5 12h14M12 5l7 7-7 7"></path>
+        </svg>
+      </a>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-3">
+      {
+        posts.map((post) => (
+          <a
+            href={`/blog/${post.id}`}
+            class="group flex flex-col gap-4 rounded-xl border border-border bg-card/50 p-8 transition-all duration-300 hover:border-primary/30 hover:bg-card"
+            data-animate
+          >
+            <time class="font-mono text-xs tracking-wide text-muted-foreground">
+              {formatDate(post.data.date)}
+            </time>
+
+            <h3 class="font-display text-xl text-foreground transition-colors group-hover:text-primary lg:text-2xl">
+              {post.data.title}
+            </h3>
+
+            <p class="line-clamp-3 text-sm leading-relaxed text-muted-foreground">
+              {post.data.description}
+            </p>
+
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              {post.data.tags.map((tag: string) => (
+                <Badge
+                  variant="secondary"
+                  className="font-mono text-[10px] tracking-wider px-2 py-0.5"
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+
+            <span class="mt-auto inline-flex items-center gap-1.5 pt-2 font-mono text-xs text-primary transition-colors">
+              Read Article
+              <svg
+                class="size-3.5 transition-transform group-hover:translate-x-1"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>

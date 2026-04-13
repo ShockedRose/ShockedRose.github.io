@@ -1,0 +1,137 @@
+---
+import { Badge } from "@/components/ui/badge";
+
+const projects = [
+  {
+    number: "01",
+    title: "Lumina Commerce",
+    description:
+      "A high-performance e-commerce platform with real-time inventory management, advanced product filtering, and a seamless checkout experience designed for conversion.",
+    tech: ["React", "TypeScript", "Node.js", "Stripe"],
+    liveUrl: "#",
+    githubUrl: "#",
+  },
+  {
+    number: "02",
+    title: "Taskflow",
+    description:
+      "Collaborative project management tool with real-time Kanban boards, sprint planning, and team analytics. Built for modern distributed teams that need clarity.",
+    tech: ["Next.js", "Prisma", "PostgreSQL", "WebSocket"],
+    liveUrl: "#",
+    githubUrl: "#",
+  },
+  {
+    number: "03",
+    title: "Pulse Analytics",
+    description:
+      "Interactive analytics dashboard featuring real-time data visualization, custom report builder, and predictive insights powered by machine learning.",
+    tech: ["Vue.js", "D3.js", "Python", "FastAPI"],
+    liveUrl: "#",
+    githubUrl: "#",
+  },
+  {
+    number: "04",
+    title: "Wavefront",
+    description:
+      "Modern music streaming interface with waveform visualization, collaborative playlists, and social discovery features for independent artists.",
+    tech: ["React", "Web Audio API", "Socket.io", "MongoDB"],
+    liveUrl: "#",
+    githubUrl: "#",
+  },
+];
+---
+
+<section id="projects" class="py-32 lg:py-40">
+  <div class="mx-auto max-w-7xl px-6 lg:px-16">
+    <div class="mb-16 flex items-center gap-4" data-animate>
+      <span class="font-mono text-xs tracking-[0.25em] text-primary">03</span>
+      <div class="h-px w-12 bg-accent-green/60"></div>
+      <span
+        class="font-mono text-xs tracking-[0.25em] uppercase text-muted-foreground"
+        >Selected Work</span
+      >
+    </div>
+
+    <div class="mb-12" data-animate data-animate-delay="1">
+      <h2
+        class="font-display text-4xl leading-[1.1] text-foreground lg:text-5xl"
+      >
+        Projects that speak<br />
+        <span class="text-primary italic">for themselves.</span>
+      </h2>
+    </div>
+
+    <div class="grid gap-6 md:grid-cols-2">
+      {
+        projects.map((project) => (
+          <article
+            class="group relative rounded-xl border border-border bg-card/50 p-8 transition-all duration-300 hover:border-primary/30 hover:bg-card lg:p-10"
+            data-animate
+          >
+            <span class="absolute top-8 right-8 font-mono text-6xl font-bold leading-none text-border/50 transition-colors duration-300 group-hover:text-primary/15 lg:top-10 lg:right-10 lg:text-7xl">
+              {project.number}
+            </span>
+
+            <div class="relative flex flex-col gap-4">
+              <h3 class="font-display text-2xl text-foreground lg:text-3xl">
+                {project.title}
+              </h3>
+
+              <p class="max-w-sm text-sm leading-relaxed text-muted-foreground">
+                {project.description}
+              </p>
+
+              <div class="flex flex-wrap gap-2 pt-2">
+                {project.tech.map((t) => (
+                  <Badge
+                    variant="secondary"
+                    className="font-mono text-[10px] tracking-wider px-2.5 py-1"
+                  >
+                    {t}
+                  </Badge>
+                ))}
+              </div>
+
+              <div class="flex gap-5 pt-4">
+                <a
+                  href={project.liveUrl}
+                  class="group/link inline-flex items-center gap-1.5 font-mono text-xs tracking-wide text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Live Demo
+                  <svg
+                    class="size-3.5 transition-transform group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M7 17L17 7M17 7H7M17 7v10" />
+                  </svg>
+                </a>
+                <a
+                  href={project.githubUrl}
+                  class="group/link inline-flex items-center gap-1.5 font-mono text-xs tracking-wide text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Source Code
+                  <svg
+                    class="size-3.5 transition-transform group-hover/link:-translate-y-0.5 group-hover/link:translate-x-0.5"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M7 17L17 7M17 7H7M17 7v10" />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>
