@@ -12,6 +12,15 @@ npx shadcn@latest add button
 
 This will place the ui components in the `src/components` directory.
 
+## TODO
+
+- Remove the AI generated mock data with mine
+- Add contact form integration with Web3Forms or another provider
+- Add a CV download action
+- Adjust the styles to remove unnecessary artifacts and contrast issues
+- Fix mobile layout
+- Add a picture of me in the hero
+
 ## Using components
 
 To use the components in your app, import them in an `.astro` file:
@@ -34,3 +43,4 @@ import { Button } from "@/components/ui/button"
   </body>
 </html>
 ```
+
