@@ -3,6 +3,7 @@
   "type": "module",
   "version": "0.0.1",
   "private": true,
+  "packageManager": "pnpm@11.5.3",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -10,9 +11,10 @@
     "astro": "astro",
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx,astro}\"",
-    "typecheck": "astro check"
+    "typecheck": "astro check --yes"
   },
   "dependencies": {
+    "@astrojs/check": "^0.9.9",
     "@astrojs/react": "5.0.7",
     "@astrojs/sitemap": "3.7.3",
     "@fontsource-variable/geist": "5.2.8",

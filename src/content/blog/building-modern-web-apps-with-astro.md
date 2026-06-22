@@ -15,9 +15,9 @@ Astro popularized the concept of "islands" — isolated interactive components i
 
 ```astro
 ---
-import StaticHeader from '../components/Header.astro';
-import InteractiveSearch from '../components/Search.tsx';
-import StaticFooter from '../components/Footer.astro';
+import StaticHeader from '../components/header.astro';
+import InteractiveSearch from '../components/search.tsx';
+import StaticFooter from '../components/footer.astro';
 ---
 
 <StaticHeader />
