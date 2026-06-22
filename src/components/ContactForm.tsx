@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 
-const WEB3FORMS_KEY = "YOUR_ACCESS_KEY_HERE";
+const _KEY = "YOUR_ACCESS_KEY_HERE";
 
 type FormStatus = "idle" | "loading" | "success" | "error";
 
@@ -19,10 +19,10 @@ export default function ContactForm() {
 
     const form = e.currentTarget;
     const formData = new FormData(form);
-    formData.append("access_key", WEB3FORMS_KEY);
+    formData.append("access_key", _KEY);
 
     try {
-      const response = await fetch("https://api.web3forms.com/submit", {
+      const response = await fetch("https://api.example.com/submit", {
         method: "POST",
         body: formData,
       });
