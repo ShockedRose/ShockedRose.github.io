@@ -1,0 +1,739 @@
+---
+// Full-page SVG rose whose stem grows down the page as the user scrolls.
+// The reveal is driven entirely by CSS scroll-driven animations; the geometry
+// (path shape, thorn placement, pointer targets) is generated to match the
+// real layout and is recomputed on resize.
+---
+
+<div class="rose-layer" aria-hidden="true">
+  <svg
+    class="rose-svg"
+    preserveAspectRatio="none"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <clipPath id="rose-petals-clip"></clipPath>
+    </defs>
+    <g class="stem-group">
+      <path class="stem" />
+    </g>
+    <g class="pointers"></g>
+    <g class="sprigs"></g>
+    <g class="thorns"></g>
+    <g class="rose"></g>
+  </svg>
+</div>
+
+<style is:global>
+  /* These rules target SVG nodes created at runtime in the script below, so
+     they are global (Astro's scoped styles only apply to template markup).
+     Everything is namespaced under .rose-layer to avoid leaking. */
+  .rose-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .rose-layer .rose-svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── Stem ── */
+  .rose-layer .stem {
+    fill: none;
+    stroke: color-mix(in oklab, var(--accent-green), black 14%);
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    /* Fallback (no scroll-driven support / reduced motion): fully drawn */
+    stroke-dasharray: var(--len);
+    stroke-dashoffset: 0;
+  }
+
+  /* ── Thorns ── */
+  .rose-layer .thorn {
+    fill: color-mix(in oklab, var(--accent-green), black 20%);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  /* ── Pointer branches reaching toward each section ── */
+  .rose-layer .pointer .branch {
+    fill: none;
+    stroke: color-mix(in oklab, var(--accent-green), black 12%);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-dasharray: var(--pl);
+    stroke-dashoffset: 0;
+  }
+  .rose-layer .pointer .tip {
+    fill: color-mix(in oklab, var(--accent-green), black 10%);
+  }
+  .rose-layer .pointer .bud {
+    fill: color-mix(in oklab, var(--primary), black 18%);
+    stroke: color-mix(in oklab, var(--primary), black 30%);
+    stroke-width: 0.85;
+  }
+
+  /* ── Sparse right-side sprigs for visual balance ── */
+  .rose-layer .sprig .branch {
+    fill: none;
+    stroke: color-mix(in oklab, var(--accent-green), black 18%);
+    stroke-width: 1.2;
+    stroke-linecap: round;
+    stroke-dasharray: var(--pl);
+    stroke-dashoffset: 0;
+  }
+  .rose-layer .sprig .bud {
+    fill: color-mix(in oklab, var(--accent-green), black 24%);
+  }
+  .rose-layer .sprig .leaf {
+    fill: color-mix(in oklab, var(--accent-green), black 14%);
+  }
+
+  /* Keep section label rows above the decorative stem/branches */
+  main section[id] > div > div:first-child {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Rose flower ── */
+  .rose-layer .petal {
+    stroke: color-mix(in oklab, var(--primary), black 36%);
+    stroke-width: 0.75;
+    stroke-linejoin: round;
+  }
+  .rose-layer .petal-outer {
+    fill: color-mix(in oklab, var(--primary) 78%, black);
+  }
+  .rose-layer .petal-mid {
+    fill: color-mix(in oklab, var(--primary) 88%, black 6%);
+  }
+  .rose-layer .petal-inner {
+    fill: color-mix(in oklab, var(--primary) 94%, black 2%);
+  }
+  .rose-layer .sepals path {
+    fill: color-mix(in oklab, var(--accent-green) 76%, black);
+    stroke: color-mix(in oklab, var(--accent-green), black 32%);
+    stroke-width: 0.75;
+  }
+  .rose-layer .rose-core {
+    fill: none;
+    stroke: color-mix(in oklab, var(--primary), black 38%);
+    stroke-width: 1.25;
+    stroke-linecap: round;
+  }
+  .rose-layer .rose-heart {
+    fill: color-mix(in oklab, var(--primary), white 12%);
+  }
+
+  /* ── Printed-circuit-board pattern over the petals ── */
+  .rose-layer .pcb-trace {
+    fill: none;
+    stroke: color-mix(in oklab, var(--accent-green), black 8%);
+    stroke-width: 1;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  .rose-layer .pcb-via {
+    fill: color-mix(in oklab, var(--accent-green), black 12%);
+  }
+  .rose-layer .pcb-pad {
+    fill: color-mix(in oklab, var(--accent-green), white 10%);
+  }
+
+  /* ── Ambient sway of the bloom ── */
+  @media (prefers-reduced-motion: no-preference) {
+    .rose-layer .rose {
+      transform-box: fill-box;
+      transform-origin: 50% 92%;
+      animation: rose-sway 9s ease-in-out infinite alternate;
+    }
+  }
+
+  @keyframes rose-sway {
+    from {
+      transform: rotate(-0.7deg);
+    }
+    to {
+      transform: rotate(0.7deg);
+    }
+  }
+
+  /* ── Scroll-driven reveal ── */
+  @keyframes rose-stem-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes rose-thorn-pop {
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes rose-branch-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  @keyframes rose-fade-in {
+    to {
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: scroll()) and (animation-range: 0% 100%) {
+      .rose-layer .stem {
+        stroke-dashoffset: var(--len);
+        animation: rose-stem-draw linear both;
+        animation-duration: auto;
+        animation-timeline: scroll(root block);
+        animation-range: 0% 92%;
+      }
+
+      .rose-layer .thorn {
+        opacity: 0;
+        transform: scale(0.2);
+        animation: rose-thorn-pop linear both;
+        animation-duration: auto;
+        animation-timeline: scroll(root block);
+        animation-range: calc(var(--p) * 88%) calc(var(--p) * 88% + 5%);
+      }
+
+      .rose-layer .pointer .branch {
+        stroke-dashoffset: var(--pl);
+        animation: rose-branch-draw linear both;
+        animation-duration: auto;
+        animation-timeline: scroll(root block);
+        animation-range: calc(var(--p) * 88%) calc(var(--p) * 88% + 7%);
+      }
+
+      .rose-layer .pointer .tip,
+      .rose-layer .pointer .bud {
+        opacity: 0;
+        animation: rose-fade-in linear both;
+        animation-duration: auto;
+        animation-timeline: scroll(root block);
+        animation-range: calc(var(--p) * 88% + 5%) calc(var(--p) * 88% + 11%);
+      }
+
+      .rose-layer .sprig .branch {
+        stroke-dashoffset: var(--pl);
+        animation: rose-branch-draw linear both;
+        animation-duration: auto;
+        animation-timeline: scroll(root block);
+        animation-range: calc(var(--p) * 88%) calc(var(--p) * 88% + 7%);
+      }
+
+      .rose-layer .sprig .bud,
+      .rose-layer .sprig .leaf {
+        opacity: 0;
+        animation: rose-fade-in linear both;
+        animation-duration: auto;
+        animation-timeline: scroll(root block);
+        animation-range: calc(var(--p) * 88% + 5%) calc(var(--p) * 88% + 11%);
+      }
+    }
+  }
+</style>
+
+<script>
+  const NS = "http://www.w3.org/2000/svg";
+  const TRACKED = ["about", "projects", "blog", "contact"];
+
+  type Pt = [number, number];
+
+  function el(name: string, attrs: Record<string, string | number> = {}) {
+    const node = document.createElementNS(NS, name);
+    for (const [k, v] of Object.entries(attrs)) {
+      node.setAttribute(k, String(v));
+    }
+    return node;
+  }
+
+  const clamp = (lo: number, v: number, hi: number) =>
+    Math.max(lo, Math.min(hi, v));
+  const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+  function clampToReach(
+    cx: number,
+    cy: number,
+    x: number,
+    y: number,
+    reach: number,
+  ): Pt {
+    const dd = Math.hypot(x - cx, y - cy);
+    if (dd <= reach) return [x, y];
+    const k = reach / dd;
+    return [cx + (x - cx) * k, cy + (y - cy) * k];
+  }
+
+  // Map a viewport point into SVG user space (handles viewBox vs render size).
+  function pointToSvg(
+    svg: SVGSVGElement,
+    clientX: number,
+    clientY: number,
+    viewW: number,
+    viewH: number,
+  ): Pt {
+    const svgRect = svg.getBoundingClientRect();
+    if (svgRect.width <= 0 || svgRect.height <= 0) {
+      return [viewW / 2, viewH / 2];
+    }
+    return [
+      ((clientX - svgRect.left) / svgRect.width) * viewW,
+      ((clientY - svgRect.top) / svgRect.height) * viewH,
+    ];
+  }
+
+  function smoothPath(pts: Pt[]) {
+    if (pts.length < 2) return "";
+    let d = `M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+    const tension = 0.16;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i];
+      const p1 = pts[i];
+      const p2 = pts[i + 1];
+      const p3 = pts[i + 2] || p2;
+      const c1x = p1[0] + (p2[0] - p0[0]) * tension;
+      const c1y = p1[1] + (p2[1] - p0[1]) * tension;
+      const c2x = p2[0] - (p3[0] - p1[0]) * tension;
+      const c2y = p2[1] - (p3[1] - p1[1]) * tension;
+      d += ` C ${c1x.toFixed(1)} ${c1y.toFixed(1)} ${c2x.toFixed(1)} ${c2y.toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}`;
+    }
+    return d;
+  }
+
+  // A tapered, cupped rose petal pointing along `angle`.
+  function petalPath(
+    cx: number,
+    cy: number,
+    angle: number,
+    len: number,
+    wid: number,
+  ) {
+    const ux = Math.cos(angle);
+    const uy = Math.sin(angle);
+    const px = -uy;
+    const py = ux;
+    const f = (x: number, y: number) => `${x.toFixed(1)} ${y.toFixed(1)}`;
+    const at = (along: number, across: number) => [
+      cx + ux * along + px * across,
+      cy + uy * along + py * across,
+    ];
+    const base = at(len * 0.06, 0);
+    const tip = at(len * 0.98, 0);
+    const notch = at(len * 0.88, 0);
+    const cL1 = at(len * 0.42, wid * 0.92);
+    const cL2 = at(len * 0.82, wid * 0.55);
+    const cR2 = at(len * 0.82, -wid * 0.55);
+    const cR1 = at(len * 0.42, -wid * 0.92);
+    return (
+      `M ${f(base[0], base[1])} ` +
+      `C ${f(cL1[0], cL1[1])} ${f(cL2[0], cL2[1])} ${f(notch[0], notch[1])} ` +
+      `Q ${f(tip[0], tip[1])} ${f(notch[0], notch[1])} ` +
+      `C ${f(cR2[0], cR2[1])} ${f(cR1[0], cR1[1])} ${f(base[0], base[1])} Z`
+    );
+  }
+
+  function spiralPath(cx: number, cy: number, maxR: number) {
+    let d = "";
+    const turns = 1.8;
+    const steps = 48;
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const a = t * turns * Math.PI * 2 - Math.PI / 2;
+      const r = maxR * (1 - t) * 0.88 + maxR * 0.04;
+      const x = cx + Math.cos(a) * r;
+      const y = cy + Math.sin(a) * r;
+      d += `${i ? " L" : "M"} ${x.toFixed(1)} ${y.toFixed(1)}`;
+    }
+    return d;
+  }
+
+  function build() {
+    const main = document.querySelector("main");
+    const svg = document.querySelector<SVGSVGElement>(".rose-svg");
+    if (!main || !svg) return;
+
+    const stem = svg.querySelector<SVGPathElement>(".stem")!;
+    const thornsG = svg.querySelector<SVGGElement>(".thorns")!;
+    const pointersG = svg.querySelector<SVGGElement>(".pointers")!;
+    const sprigsG = svg.querySelector<SVGGElement>(".sprigs")!;
+    const roseG = svg.querySelector<SVGGElement>(".rose")!;
+    const clip = svg.querySelector<SVGClipPathElement>("#rose-petals-clip")!;
+
+    const W = main.clientWidth;
+    const H = main.scrollHeight;
+    if (W < 2 || H < 2) return;
+
+    const layer = svg.parentElement as HTMLElement | null;
+    if (layer) layer.style.height = `${H}px`;
+
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    // Ensure layout is flushed before mapping DOM rects into viewBox coords.
+    void svg.getBoundingClientRect();
+
+    const isMobile = W < 768;
+
+    type Mark = { cy: number; endX: number; endY: number; minStemY: number };
+    const marks: Mark[] = [];
+    for (const id of TRACKED) {
+      const sec = document.getElementById(id);
+      if (!sec) continue;
+      const inner = (sec.firstElementChild as HTMLElement) || sec;
+      const dividerRow = inner.firstElementChild as HTMLElement;
+      if (!dividerRow) continue;
+      const dRect = dividerRow.getBoundingClientRect();
+      const gapBelow = isMobile ? 40 : 52;
+      const clientY = dRect.bottom + gapBelow;
+      const clientX = dRect.left + (isMobile ? 28 : 40);
+      const [endX, endY] = pointToSvg(svg, clientX, clientY, W, H);
+      const [, minStemY] = pointToSvg(svg, dRect.left, dRect.bottom + 12, W, H);
+      marks.push({ cy: endY, endX, endY, minStemY });
+    }
+
+    // ── Rose placement (right half of hero content, aligned with title) ──
+    const heroContent = document.getElementById("hero-content");
+    const R = clamp(44, W * 0.062, 88);
+    let roseX = W * 0.75;
+    let roseY = H * 0.25;
+    if (heroContent) {
+      const rect = heroContent.getBoundingClientRect();
+      const title = heroContent.querySelector("h1");
+      const titleRect = title?.getBoundingClientRect();
+      const anchorY = titleRect
+        ? titleRect.top + titleRect.height * 0.42
+        : rect.top + rect.height * 0.36;
+      [roseX, roseY] = pointToSvg(
+        svg,
+        rect.left + rect.width * 0.75,
+        anchorY,
+        W,
+        H,
+      );
+    }
+
+    // ── Stem waypoints: down from the rose, weaving right→left ──
+    const pts: Pt[] = [];
+    pts.push([roseX, roseY + R * 0.82]);
+    const xStart = roseX;
+    const xEnd = isMobile ? W * 0.5 : W * 0.22;
+    marks.forEach((m, i) => {
+      const t = marks.length > 1 ? i / (marks.length - 1) : 0;
+      const baseX = lerp(xStart * 0.97, xEnd, t);
+      const weave = Math.sin(t * Math.PI * 2.1 + 0.6) * W * (isMobile ? 0.16 : 0.13);
+      const x = clamp(W * 0.13, baseX + weave, W * 0.9);
+      pts.push([x, m.cy]);
+    });
+    pts.push([isMobile ? W * 0.46 : W * 0.2, H - clamp(60, H * 0.02, 160)]);
+
+    stem.setAttribute("d", smoothPath(pts));
+    const len = stem.getTotalLength();
+    stem.style.setProperty("--len", String(Math.ceil(len)));
+
+    // ── Thorns spaced along the stem, alternating sides ──
+    thornsG.replaceChildren();
+    const count = clamp(6, Math.round(len / 180), 36);
+    for (let i = 1; i < count; i++) {
+      const dist = (i / count) * len;
+      const p = stem.getPointAtLength(dist);
+      const p2 = stem.getPointAtLength(Math.min(len, dist + 1));
+      let tnx = p2.x - p.x;
+      let tny = p2.y - p.y;
+      const tl = Math.hypot(tnx, tny) || 1;
+      tnx /= tl;
+      tny /= tl;
+      const side = i % 2 ? 1 : -1;
+      const dnx = -tny * side;
+      const dny = tnx * side;
+      const size = clamp(7, len * 0.0045, 12);
+      const hb = size * 0.34;
+      const b1 = [p.x + tnx * hb, p.y + tny * hb];
+      const b2 = [p.x - tnx * hb, p.y - tny * hb];
+      const tip = [
+        p.x + dnx * size * 1.5 - tnx * size * 0.85,
+        p.y + dny * size * 1.5 - tny * size * 0.85,
+      ];
+      const ctrl = [p.x + dnx * size * 0.35 + tnx * hb, p.y + dny * size * 0.35 + tny * hb];
+      const thorn = el("path", {
+        class: "thorn",
+        d:
+          `M ${b1[0].toFixed(1)} ${b1[1].toFixed(1)} ` +
+          `Q ${ctrl[0].toFixed(1)} ${ctrl[1].toFixed(1)} ${tip[0].toFixed(1)} ${tip[1].toFixed(1)} ` +
+          `L ${b2[0].toFixed(1)} ${b2[1].toFixed(1)} Z`,
+      });
+      (thorn as SVGElement).style.setProperty("--p", (dist / len).toFixed(4));
+      thornsG.appendChild(thorn);
+    }
+
+    // ── Pointer branches reaching from the stem toward each section ──
+    pointersG.replaceChildren();
+    const SAMPLES = 260;
+    const sample: { x: number; y: number; d: number }[] = [];
+    for (let i = 0; i <= SAMPLES; i++) {
+      const dd = (i / SAMPLES) * len;
+      const pp = stem.getPointAtLength(dd);
+      sample.push({ x: pp.x, y: pp.y, d: dd });
+    }
+    marks.forEach((m) => {
+      const eligible = sample.filter((s) => s.y >= m.minStemY);
+      const pool = eligible.length > 0 ? eligible : sample;
+      let best = pool[0];
+      let bestErr = Infinity;
+      for (const s of pool) {
+        const err = Math.abs(s.y - m.cy);
+        if (err < bestErr) {
+          bestErr = err;
+          best = s;
+        }
+      }
+      const ax = best.x;
+      const ay = best.y;
+      // Stop short of the target so branches stay clear of label rows.
+      const reach = 0.72;
+      const endx = ax + (m.endX - ax) * reach;
+      const endy = ay + (m.endY - ay) * reach;
+      const dx = endx - ax;
+      const midx = ax + dx * 0.5;
+      const midy = Math.max(ay, endy, m.minStemY) + Math.abs(dx) * 0.08;
+
+      const g = el("g", { class: "pointer" });
+      (g as SVGElement).style.setProperty("--p", (best.d / len).toFixed(4));
+
+      const branch = el("path", {
+        class: "branch",
+        d: `M ${ax.toFixed(1)} ${ay.toFixed(1)} Q ${midx.toFixed(1)} ${midy.toFixed(1)} ${endx.toFixed(1)} ${endy.toFixed(1)}`,
+      });
+      g.appendChild(branch);
+
+      let ex = endx - midx;
+      let ey = endy - midy;
+      const eln = Math.hypot(ex, ey) || 1;
+      ex /= eln;
+      ey /= eln;
+      const nx = -ey;
+      const ny = ex;
+      const s = isMobile ? 5 : 7;
+      const tip = el("path", {
+        class: "tip",
+        d:
+          `M ${(endx + ex * s).toFixed(1)} ${(endy + ey * s).toFixed(1)} ` +
+          `L ${(endx - ex * s * 0.3 + nx * s * 0.7).toFixed(1)} ${(endy - ey * s * 0.3 + ny * s * 0.7).toFixed(1)} ` +
+          `L ${(endx - ex * s * 0.3 - nx * s * 0.7).toFixed(1)} ${(endy - ey * s * 0.3 - ny * s * 0.7).toFixed(1)} Z`,
+      });
+      const bud = el("circle", {
+        class: "bud",
+        cx: endx.toFixed(1),
+        cy: endy.toFixed(1),
+        r: isMobile ? 2.6 : 3.2,
+      });
+      g.appendChild(tip);
+      g.appendChild(bud);
+      pointersG.appendChild(g);
+
+      const pl = (branch as SVGPathElement).getTotalLength();
+      (branch as SVGElement).style.setProperty("--pl", String(Math.ceil(pl)));
+    });
+
+    // ── Sparse sprigs to the right of the stem (visual balance) ──
+    sprigsG.replaceChildren();
+    const nearestSample = (y: number) => {
+      let best = sample[0];
+      let bestErr = Infinity;
+      for (const s of sample) {
+        const err = Math.abs(s.y - y);
+        if (err < bestErr) {
+          bestErr = err;
+          best = s;
+        }
+      }
+      return best;
+    };
+
+    const addSprig = (hit: { x: number; y: number; d: number }) => {
+      const p2 = stem.getPointAtLength(Math.min(len, hit.d + 1.5));
+      let tnx = p2.x - hit.x;
+      let tny = p2.y - hit.y;
+      const tl = Math.hypot(tnx, tny) || 1;
+      tnx /= tl;
+      tny /= tl;
+      // Grow toward the viewport-right side of the stem.
+      let rnx = tny;
+      let rny = -tnx;
+      if (rnx < 0) {
+        rnx = -tny;
+        rny = tnx;
+      }
+
+      const branchLen = clamp(52, W * (isMobile ? 0.11 : 0.1), 148);
+      const ax = hit.x;
+      const ay = hit.y;
+      const endx = clamp(ax + rnx * branchLen, ax + 16, W - 12);
+      const endy = clamp(ay + rny * branchLen, 12, H - 12);
+      const midx = ax + rnx * branchLen * 0.48;
+      const midy = ay + rny * branchLen * 0.48 - branchLen * 0.05;
+
+      const g = el("g", { class: "sprig" });
+      (g as SVGElement).style.setProperty("--p", (hit.d / len).toFixed(4));
+
+      const branch = el("path", {
+        class: "branch",
+        d: `M ${ax.toFixed(1)} ${ay.toFixed(1)} Q ${midx.toFixed(1)} ${midy.toFixed(1)} ${endx.toFixed(1)} ${endy.toFixed(1)}`,
+      });
+      g.appendChild(branch);
+
+      const lx = endx + rnx * 6;
+      const ly = endy + rny * 6;
+      g.appendChild(
+        el("path", {
+          class: "leaf",
+          d:
+            `M ${lx.toFixed(1)} ${ly.toFixed(1)} ` +
+            `Q ${(lx + rny * 10).toFixed(1)} ${(ly - rnx * 10).toFixed(1)} ${(lx + rnx * 14).toFixed(1)} ${(ly + rny * 14).toFixed(1)} ` +
+            `Q ${(lx - rny * 5).toFixed(1)} ${(ly + rnx * 5).toFixed(1)} ${lx.toFixed(1)} ${ly.toFixed(1)} Z`,
+        }),
+      );
+      g.appendChild(
+        el("circle", {
+          class: "bud",
+          cx: endx.toFixed(1),
+          cy: endy.toFixed(1),
+          r: isMobile ? 2.4 : 3,
+        }),
+      );
+      sprigsG.appendChild(g);
+
+      const pl = (branch as SVGPathElement).getTotalLength();
+      (branch as SVGElement).style.setProperty("--pl", String(Math.ceil(pl)));
+    };
+
+    const sprigYs: number[] = [];
+    for (let i = 0; i < marks.length - 1; i++) {
+      if (i % 2 === 1) continue;
+      sprigYs.push((marks[i].cy + marks[i + 1].cy) * 0.5);
+    }
+    if (marks.length > 0) {
+      const tailGap = (H - marks[marks.length - 1].cy) * 0.42;
+      if (tailGap > 120) sprigYs.push(marks[marks.length - 1].cy + tailGap);
+    }
+
+    for (const y of sprigYs) {
+      addSprig(nearestSample(y));
+    }
+
+    // ── Rose flower with a circuit-board petal pattern ──
+    roseG.replaceChildren();
+    clip.replaceChildren();
+
+    // Sepals (green) fanning out from the base toward the stem.
+    const sepals = el("g", { class: "sepals" });
+    for (let i = -1; i <= 1; i++) {
+      const a = Math.PI / 2 + i * 0.48;
+      sepals.appendChild(el("path", { d: petalPath(roseX, roseY + R * 0.1, a, R * 0.72, R * 0.09) }));
+    }
+    roseG.appendChild(sepals);
+
+    const addPetalLayer = (
+      cnt: number,
+      plen: number,
+      pwid: number,
+      rot: number,
+      cls: string,
+    ) => {
+      const g = el("g", { class: `petal ${cls}` });
+      for (let i = 0; i < cnt; i++) {
+        const a = rot + (i / cnt) * Math.PI * 2;
+        const d = petalPath(roseX, roseY, a, plen, pwid);
+        g.appendChild(el("path", { d }));
+        clip.appendChild(el("path", { d }));
+      }
+      roseG.appendChild(g);
+    };
+    addPetalLayer(6, R * 0.96, R * 0.38, 0, "petal-outer");
+    addPetalLayer(6, R * 0.68, R * 0.34, Math.PI / 6, "petal-mid");
+    addPetalLayer(5, R * 0.42, R * 0.28, Math.PI / 5, "petal-inner");
+
+    roseG.appendChild(el("path", { class: "rose-core", d: spiralPath(roseX, roseY, R * 0.2) }));
+    roseG.appendChild(el("circle", { class: "rose-heart", cx: roseX, cy: roseY, r: R * 0.035 }));
+
+    // Circuit traces evenly spaced around the bloom, clipped to the petals.
+    const pcb = el("g", { class: "pcb", "clip-path": "url(#rose-petals-clip)" });
+    const reach = R * 0.86;
+    const traceCount = 5;
+    for (let t = 0; t < traceCount; t++) {
+      const angle = (t / traceCount) * Math.PI * 2 + Math.PI / 2;
+      const innerR = R * 0.3;
+      const midR = R * 0.56;
+      const start = clampToReach(
+        roseX,
+        roseY,
+        roseX + Math.cos(angle) * innerR,
+        roseY + Math.sin(angle) * innerR,
+        reach,
+      );
+      const mid = clampToReach(
+        roseX,
+        roseY,
+        roseX + Math.cos(angle) * midR,
+        roseY + Math.sin(angle) * midR,
+        reach,
+      );
+      const perp = angle + (t % 2 === 0 ? 1 : -1) * (Math.PI / 2);
+      const end = clampToReach(
+        roseX,
+        roseY,
+        mid[0] + Math.cos(perp) * R * 0.15,
+        mid[1] + Math.sin(perp) * R * 0.15,
+        reach,
+      );
+      const d =
+        `M ${start[0].toFixed(1)} ${start[1].toFixed(1)} ` +
+        `L ${mid[0].toFixed(1)} ${mid[1].toFixed(1)} ` +
+        `L ${end[0].toFixed(1)} ${end[1].toFixed(1)}`;
+      pcb.appendChild(el("path", { class: "pcb-trace", d }));
+      pcb.appendChild(
+        el("circle", {
+          class: "pcb-via",
+          cx: start[0].toFixed(1),
+          cy: start[1].toFixed(1),
+          r: R * 0.024,
+        }),
+      );
+      pcb.appendChild(
+        el("circle", {
+          class: "pcb-pad",
+          cx: end[0].toFixed(1),
+          cy: end[1].toFixed(1),
+          r: R * 0.03,
+        }),
+      );
+    }
+    roseG.appendChild(pcb);
+  }
+
+  let raf = 0;
+  function schedule() {
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(build);
+  }
+
+  if (document.readyState !== "loading") schedule();
+  else document.addEventListener("DOMContentLoaded", schedule);
+  window.addEventListener("load", schedule);
+  window.addEventListener("resize", schedule);
+  if (document.fonts?.ready) document.fonts.ready.then(schedule);
+
+  const main = document.querySelector("main");
+  if (main && "ResizeObserver" in window) {
+    new ResizeObserver(schedule).observe(main);
+  }
+</script>

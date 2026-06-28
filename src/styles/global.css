@@ -148,6 +148,10 @@
   html {
     @apply font-sans scroll-smooth;
   }
+  main {
+    position: relative;
+    isolation: isolate;
+  }
 }
 
 body::after {
